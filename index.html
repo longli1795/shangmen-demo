@@ -39,6 +39,11 @@ input::placeholder,textarea::placeholder{color:var(--ink3)}
 .icobtn{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;color:var(--ink)}
 .icobtn:active{background:rgba(0,0,0,.05)}
 .demo-flag{font-size:11px;letter-spacing:.08em;color:var(--brand);border:1px solid var(--brand);border-radius:999px;padding:3px 9px}
+@media (max-width:400px){
+  .hdr .ttl{display:none}
+  .ind button{padding:6px 9px;font-size:12px}
+  .demo-flag{padding:2px 7px}
+}
 
 /* 行业切换 */
 .ind{display:flex;gap:6px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px}

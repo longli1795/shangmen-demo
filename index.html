@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F7F4EE">
+<title>上门服务 · 预约派单演示</title>
+<style>
+:root{
+  --bg:#F7F4EE; --card:#fff; --ink:#1A1712; --ink2:#6B655C; --ink3:#9A938A;
+  --line:#E7E0D4; --brand:#B8311B; --brand2:#D9492C; --soft:#FBEDEA;
+  --ok:#2E6B4E; --oksoft:#EBF3EE; --warn:#8A6B12; --warnsoft:#FBF3DC;
+  --r:14px; --pad:18px;
+  --sys:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:#E9E3D6;font-family:var(--sys);color:var(--ink);-webkit-font-smoothing:antialiased}
+button{font-family:inherit;border:0;background:none;cursor:pointer;color:inherit}
+input,textarea{font-family:inherit;font-size:16px;border:0;background:none;outline:none;color:inherit;width:100%}
+input::placeholder,textarea::placeholder{color:var(--ink3)}
+
+/* 手机外框（桌面上居中显示） */
+.phone{max-width:430px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;overflow-x:hidden}
+@media(min-width:520px){
+  body{padding:26px 0}
+  .phone{min-height:calc(100vh - 52px);border-radius:22px;box-shadow:0 18px 60px rgba(26,23,18,.18);overflow:hidden}
+}
+
+/* 顶部 */
+.hdr{
+  position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:10px;
+  height:56px;padding:0 14px;background:rgba(247,244,238,.92);backdrop-filter:blur(10px);
+  border-bottom:1px solid transparent;transition:.2s;
+}
+.hdr.solid{border-color:var(--line)}
+.hdr .ttl{font-size:17px;font-weight:600;letter-spacing:.01em}
+.hdr .sp{flex:1}
+.icobtn{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;color:var(--ink)}
+.icobtn:active{background:rgba(0,0,0,.05)}
+.demo-flag{font-size:11px;letter-spacing:.08em;color:var(--brand);border:1px solid var(--brand);border-radius:999px;padding:3px 9px}
+
+/* 行业切换 */
+.ind{display:flex;gap:6px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px}
+.ind button{font-size:13px;padding:6px 12px;border-radius:999px;color:var(--ink2)}
+.ind button.on{background:var(--ink);color:#fff;font-weight:600}
+
+/* 页面容器 */
+.screen{display:none;padding:0 var(--pad) 96px}
+.screen.on{display:block;animation:in .28s ease both}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.screen.on{animation:none}.toast{transition:none}}
+
+/* 通用 */
+.card{background:var(--card);border-radius:var(--r);border:1px solid var(--line);overflow:hidden}
+.h2{font-size:22px;font-weight:700;letter-spacing:-.01em;line-height:1.3}
+.muted{color:var(--ink2);font-size:13.5px;line-height:1.6}
+.sec{margin-top:26px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+.sec-h h3{font-size:15px;font-weight:600}
+.sec-h span{font-size:12.5px;color:var(--ink3)}
+
+/* 首屏 */
+.greet{padding:6px 0 14px}
+.greet p{font-size:13.5px;color:var(--ink2)}
+.hero{
+  margin-top:2px;background:var(--ink);color:#F7F4EE;border-radius:18px;padding:22px 20px 20px;position:relative;overflow:hidden;
+}
+.hero::after{content:"";position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:rgba(184,49,27,.35);filter:blur(6px)}
+.hero .tag{font-size:11.5px;letter-spacing:.16em;color:rgba(247,244,238,.55);text-transform:uppercase}
+.hero h2{margin-top:8px;font-size:27px;line-height:1.25;letter-spacing:-.02em;font-weight:800}
+.hero p{margin-top:8px;font-size:13px;color:rgba(247,244,238,.72);line-height:1.65}
+.hero .btn{margin-top:16px}
+
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;height:50px;border-radius:12px;background:var(--brand);color:#fff;font-size:16px;font-weight:600;width:100%}
+.btn:active{background:var(--brand2)}
+.btn.light{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn.sm{height:38px;font-size:13.5px;border-radius:9px;width:auto;padding:0 14px}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink2)}
+
+/* 品类九宫格 */
+.cats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cat{
+  background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px;
+  display:flex;flex-direction:column;gap:8px;text-align:left;transition:.18s;
+}
+.cat:active{transform:scale(.985)}
+.cat .i{width:34px;height:30px;border-radius:9px;background:var(--soft);color:var(--brand);display:grid;place-items:center;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;letter-spacing:.08em;font-weight:600}
+.cat b{font-size:14.5px;font-weight:600}
+.cat span{font-size:12px;color:var(--ink3)}
+.cat.on{border-color:var(--brand);background:var(--soft)}
+.cat.on .i{background:var(--brand);color:#fff}
+
+/* 步骤 */
+.steps{display:flex;gap:8px}
+.step{flex:1;border-top:2px solid var(--ink);padding-top:10px}
+.step b{display:block;font-size:12px;font-family:ui-monospace,Consolas,monospace;color:var(--brand);letter-spacing:.1em}
+.step span{font-size:13px;color:var(--ink2);line-height:1.5;display:block;margin-top:4px}
+
+/* 表单 */
+.field{padding:16px 16px;border-bottom:1px solid var(--line)}
+.field:last-child{border-bottom:0}
+.field .lb{font-size:12.5px;color:var(--ink3);letter-spacing:.04em;margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:13.5px;color:var(--ink2);background:#fff}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
+.stepper{display:flex;align-items:center;gap:14px}
+.stepper button{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);font-size:18px;color:var(--ink);display:grid;place-items:center;background:#fff}
+.stepper .n{font-size:17px;font-weight:600;min-width:28px;text-align:center}
+textarea{resize:none;min-height:64px;line-height:1.6;font-size:15px}
+.addr{display:flex;align-items:center;gap:10px}
+.addr .pin{color:var(--brand)}
+
+/* 底部提交条 */
+.submitbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;padding:10px var(--pad) calc(10px + env(safe-area-inset-bottom));
+  background:rgba(247,244,238,.96);backdrop-filter:blur(12px);border-top:1px solid var(--line);
+  display:none;max-width:430px;margin:0 auto;
+}
+.submitbar.on{display:flex;align-items:center;gap:12px}
+.submitbar .sum{flex:1;line-height:1.25}
+.submitbar .sum b{font-size:18px;color:var(--brand);font-weight:700}
+.submitbar .sum span{display:block;font-size:11.5px;color:var(--ink3)}
+.submitbar .btn{width:auto;min-width:132px;height:48px}
+
+/* 底部 tabbar */
+.tabs{
+  position:fixed;left:0;right:0;bottom:0;z-index:35;display:flex;max-width:430px;margin:0 auto;
+  background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.tabs button{flex:1;height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10.5px;color:var(--ink3)}
+.tabs button.on{color:var(--brand)}
+.tabs svg{width:22px;height:22px}
+.tabs.hide{display:none}
+
+/* 订单卡 */
+.order{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:15px;margin-bottom:11px}
+.order .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.order .no{font-family:ui-monospace,Consolas,monospace;font-size:12px;color:var(--ink3);letter-spacing:.04em}
+.order .what{margin-top:8px;font-size:15.5px;font-weight:600}
+.order .meta{margin-top:6px;font-size:13px;color:var(--ink2);line-height:1.6}
+.order .foot{margin-top:12px;padding-top:11px;border-top:1px dashed var(--line);display:flex;justify-content:space-between;align-items:center}
+.order .price{font-size:16px;font-weight:700}
+.order .price small{font-size:11.5px;color:var(--ink3);font-weight:400;margin-left:4px}
+
+.badge{font-size:11.5px;padding:4px 10px;border-radius:999px;font-weight:600;white-space:nowrap}
+.b-wait{background:var(--warnsoft);color:var(--warn)}
+.b-run{background:var(--soft);color:var(--brand)}
+.b-done{background:var(--oksoft);color:var(--ok)}
+
+/* 时间轴 */
+.tl{margin-top:16px}
+.tl .it{display:flex;gap:12px;position:relative;padding-bottom:18px}
+.tl .it:last-child{padding-bottom:0}
+.tl .dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--line);background:#fff;margin-top:3px;flex:0 0 auto;z-index:2}
+.tl .it.done .dot{background:var(--brand);border-color:var(--brand)}
+.tl .it.now .dot{background:#fff;border-color:var(--brand);box-shadow:0 0 0 4px var(--soft)}
+.tl .it::before{content:"";position:absolute;left:6px;top:16px;bottom:0;width:1px;background:var(--line)}
+.tl .it:last-child::before{display:none}
+.tl .tx b{font-size:14px;font-weight:600}
+.tl .tx span{display:block;font-size:12.5px;color:var(--ink3);margin-top:2px}
+
+/* 管理后台 */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 12px}
+.stat b{display:block;font-size:22px;font-weight:700;letter-spacing:-.02em}
+.stat span{font-size:11.5px;color:var(--ink3)}
+.admin-row{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:10px;display:flex;gap:10px;align-items:center}
+.admin-row .txt{flex:1;min-width:0}
+.admin-row .txt b{font-size:14px;font-weight:600;display:block}
+.admin-row .txt span{font-size:12px;color:var(--ink3);display:block;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* 完成页 */
+.done-wrap{padding:56px 0 0;text-align:center}
+.done-ico{width:74px;height:74px;border-radius:50%;background:var(--oksoft);color:var(--ok);display:grid;place-items:center;margin:0 auto}
+.done-wrap h2{margin-top:20px;font-size:23px;font-weight:700}
+.done-wrap p{margin-top:10px;font-size:14px;color:var(--ink2);line-height:1.7}
+.done-wrap .no{margin-top:18px;font-family:ui-monospace,Consolas,monospace;font-size:13px;color:var(--ink3)}
+.done-wrap .btn{margin-top:26px}
+
+/* 我的 */
+.me-hd{display:flex;align-items:center;gap:14px;padding:22px 0 8px}
+.avatar{width:56px;height:56px;border-radius:50%;background:var(--ink);color:#F7F4EE;display:grid;place-items:center;font-size:20px;font-weight:600}
+.rows{background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-top:14px}
+.row{display:flex;align-items:center;gap:12px;padding:15px 16px;border-bottom:1px solid var(--line);text-align:left;width:100%}
+.row:last-child{border-bottom:0}
+.row .t{flex:1;font-size:15px}
+.row .v{font-size:13px;color:var(--ink3)}
+.row svg{color:var(--ink3)}
+.note{margin-top:20px;font-size:12px;color:var(--ink3);line-height:1.7;text-align:center}
+
+.toast{
+  position:fixed;left:50%;bottom:110px;transform:translateX(-50%) translateY(10px);z-index:90;
+  background:rgba(26,23,18,.92);color:#fff;font-size:13.5px;padding:10px 18px;border-radius:999px;
+  opacity:0;pointer-events:none;transition:.25s;max-width:80%;text-align:center;
+}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <header class="hdr" id="hdr">
+    <button class="icobtn" id="back" style="display:none" onclick="history.back()" aria-label="返回">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <div class="ttl" id="ttl">上门服务</div>
+    <div class="sp"></div>
+    <div class="ind" id="ind">
+      <button data-ind="hui">回收</button>
+      <button data-ind="jia">家政</button>
+      <button data-ind="wei">维修</button>
+    </div>
+    <span class="demo-flag">演示</span>
+  </header>
+
+  <main id="main">
+    <!-- 首页 -->
+    <section class="screen on" id="s-home">
+      <div class="greet">
+        <p id="greetSub">今天想处理什么？</p>
+      </div>
+      <div class="hero">
+        <div class="tag" id="heroTag">免费上门估价</div>
+        <h2 id="heroTitle">上门回收<br>不用自己搬</h2>
+        <p id="heroDesc">选品类、约时间，师傅上门称重，当场结算。</p>
+        <button class="btn" style="width:auto;padding:0 22px;height:44px;font-size:15px" onclick="go('#/book')">立即预约 →</button>
+      </div>
+
+      <div class="sec">
+        <div class="sec-h"><h3>选一个品类</h3><span>可多选</span></div>
+        <div class="cats" id="cats"></div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-h"><h3>怎么用</h3></div>
+        <div class="steps">
+          <div class="step"><b>01</b><span>选品类，约时间</span></div>
+          <div class="step"><b>02</b><span>师傅接单上门</span></div>
+          <div class="step"><b>03</b><span>现场计量结算</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 预约 -->
+    <section class="screen" id="s-book">
+      <div class="sec" style="margin-top:14px">
+        <div class="card">
+          <div class="field">
+            <div class="lb">服务品类（可多选）</div>
+            <div class="chips" id="bookCats"></div>
+          </div>
+          <div class="field">
+            <div class="lb">预估数量</div>
+            <div class="stepper">
+              <button onclick="stepQty(-1)">−</button>
+              <div class="n" id="qty">1</div>
+              <button onclick="stepQty(1)">+</button>
+              <span class="muted" style="margin-left:6px" id="unitTxt">件</span>
+            </div>
+          </div>
+          <div class="field">
+            <div class="lb">上门地址</div>
+            <div class="addr">
+              <span class="pin">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>
+              </span>
+              <input id="addr" placeholder="小区 / 楼栋 / 门牌，例如：阳光小区 3 栋 502">
+            </div>
+          </div>
+          <div class="field">
+            <div class="lb">上门时间</div>
+            <div class="chips" id="days" style="margin-bottom:10px"></div>
+            <div class="chips" id="slots"></div>
+          </div>
+          <div class="field">
+            <div class="lb">备注（选填）</div>
+            <textarea id="note" placeholder="例如：冰箱在 6 楼无电梯，需要两个人"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 提交成功 -->
+    <section class="screen" id="s-done">
+      <div class="done-wrap">
+        <div class="done-ico">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>
+        </div>
+        <h2>预约成功</h2>
+        <p>师傅会在 30 分钟内联系你确认时间。<br>上门估价免费，不满意可以取消。</p>
+        <div class="no" id="doneNo">单号 —</div>
+        <button class="btn" onclick="go('#/orders')">查看我的订单</button>
+        <button class="btn ghost" style="margin-top:10px" onclick="go('#/home')">返回首页</button>
+      </div>
+    </section>
+
+    <!-- 订单列表 -->
+    <section class="screen" id="s-orders">
+      <div class="chips" style="margin:14px 0 12px" id="filters">
+        <button class="chip on" data-f="all">全部</button>
+        <button class="chip" data-f="run">进行中</button>
+        <button class="chip" data-f="done">已完成</button>
+      </div>
+      <div id="orderList"></div>
+    </section>
+
+    <!-- 订单详情 -->
+    <section class="screen" id="s-order">
+      <div id="orderDetail"></div>
+    </section>
+
+    <!-- 我的 -->
+    <section class="screen" id="s-me">
+      <div class="me-hd">
+        <div class="avatar">演</div>
+        <div>
+          <div style="font-size:17px;font-weight:600">演示用户</div>
+          <div class="muted">这个 Demo 不联网，数据只存在本机</div>
+        </div>
+      </div>
+      <div class="rows">
+        <button class="row" onclick="go('#/orders')"><span class="t">我的订单</span><span class="v" id="meCount"></span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></button>
+        <button class="row" onclick="toast('演示版未接入地址簿')"><span class="t">常用地址</span><span class="v">未设置</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></button>
+        <button class="row" onclick="go('#/admin')"><span class="t">管理后台（演示）</span><span class="v">派单 / 改价 / 导出</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7"/></svg></button>
+      </div>
+      <div class="note">
+        右上角可以切换「回收 / 家政 / 维修」——<br>同一套流程，换品类和文案就能落到不同行业。
+      </div>
+    </section>
+
+    <!-- 管理后台 -->
+    <section class="screen" id="s-admin">
+      <div class="stats" style="margin-top:14px" id="adminStats"></div>
+      <div class="sec-h" style="margin-top:22px"><h3>订单池</h3><button class="btn sm ghost" onclick="exportCSV()">导出 Excel</button></div>
+      <div id="adminList"></div>
+      <div class="note">后台是演示重点：客户看不到这些，但上线后每天都用。</div>
+    </section>
+  </main>
+
+  <div class="submitbar" id="submitbar">
+    <div class="sum"><b id="estPrice">¥0</b><span>预估价 · 现场结算</span></div>
+    <button class="btn" onclick="submitOrder()">提交预约</button>
+  </div>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="home" class="on">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5"/><path d="M5.5 9.5V21h13V9.5"/></svg>
+      首页
+    </button>
+    <button data-tab="orders">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 12h16M4 19h10"/></svg>
+      订单
+    </button>
+    <button data-tab="me">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.2-3.6 4-5.4 7.5-5.4s6.3 1.8 7.5 5.4"/></svg>
+      我的
+    </button>
+  </nav>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= 数据 ================= */
+const INDUSTRIES = {
+  hui: {
+    name:'回收', unit:'件',
+    greet:'今天想处理什么？',
+    tag:'免费上门估价',
+    title:'上门回收<br>不用自己搬',
+    desc:'选品类、约时间，师傅上门称重，当场结算。',
+    cats:[
+      {id:'a', n:'大件家电', d:'冰箱 / 洗衣机 / 空调', p:40, i:'❄'},
+      {id:'b', n:'家具沙发', d:'沙发 / 衣柜 / 床垫', p:30, i:'▣'},
+      {id:'c', n:'数码设备', d:'电脑 / 手机 / 显示器', p:50, i:'◫'},
+      {id:'d', n:'旧衣鞋包', d:'按斤收，可上门', p:10, i:'◍'},
+      {id:'e', n:'纸箱书本', d:'纸板 / 书 / 塑料', p:8,  i:'▤'},
+      {id:'f', n:'其他杂物', d:'先说清楚再估价', p:0,  i:'＋'}
+    ]
+  },
+  jia: {
+    name:'家政', unit:'次',
+    greet:'家里想收拾一下？',
+    tag:'持证师傅 · 可开票',
+    title:'上门保洁<br>擦到看不见灰',
+    desc:'选服务、约时间，到点上门，干完验收再付款。',
+    cats:[
+      {id:'a', n:'日常保洁', d:'2 小时起，按小时算', p:120, i:'✦'},
+      {id:'b', n:'深度保洁', d:'厨房 / 卫生间 / 死角', p:380, i:'✧'},
+      {id:'c', n:'玻璃清洗', d:'含高层外窗', p:200, i:'▢'},
+      {id:'d', n:'家电清洗', d:'油烟机 / 空调 / 洗衣机', p:150, i:'◈'},
+      {id:'e', n:'整理收纳', d:'衣橱 / 全屋', p:300, i:'◫'},
+      {id:'f', n:'开荒保洁', d:'新房入住前', p:600, i:'▤'}
+    ]
+  },
+  wei: {
+    name:'维修', unit:'台',
+    greet:'哪里不好用了？',
+    tag:'30 分钟响应',
+    title:'家电维修<br>修不好不收费',
+    desc:'说清故障、约时间，师傅带件上门，当场试机。',
+    cats:[
+      {id:'a', n:'空调', d:'不制冷 / 漏水 / 异响', p:80, i:'❄'},
+      {id:'b', n:'洗衣机', d:'不脱水 / 漏水 / 不进水', p:60, i:'◍'},
+      {id:'c', n:'冰箱', d:'不制冷 / 结冰 / 噪音', p:80, i:'▣'},
+      {id:'d', n:'热水器', d:'不打火 / 水温不稳', p:70, i:'△'},
+      {id:'e', n:'水电电路', d:'跳闸 / 插座 / 灯具', p:50, i:'⚡'},
+      {id:'f', n:'其他家电', d:'先说清型号和故障', p:40, i:'＋'}
+    ]
+  }
+};
+
+const STATUS = ['待接单','已派单','上门中','已称重','已完成'];
+const TECHS = ['王师傅','李师傅','张师傅'];
+
+const DAYS  = ['今天','明天','后天'];
+const SLOTS = ['9:00-12:00','13:00-16:00','16:00-19:00'];
+
+/* ================= 状态 ================= */
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)) }catch(e){} }
+};
+
+let ind = store.get('sm_ind', 'hui');
+let orders = store.get('sm_orders', null);
+if (!orders) {
+  orders = [
+    mkOrder({cats:['a'], qty:2, addr:'阳光小区 3 栋 502', day:0, slot:0, status:2, price:160, tech:'王师傅', id:'SM24110901'}),
+    mkOrder({cats:['d','e'], qty:3, addr:'和平路 88 号 1 单元 201', day:1, slot:1, status:4, price:96, tech:'李师傅', id:'SM24110802'})
+  ];
+  store.set('sm_orders', orders);
+}
+
+let draft = { cats:[], qty:1, addr:'', day:0, slot:0, note:'' };
+
+/* ================= 工具 ================= */
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const cur = () => INDUSTRIES[ind];
+const catOf = id => cur().cats.find(c => c.id === id);
+function orderNo(){ return 'SM' + Date.now().toString().slice(-8) }
+function money(n){ return '¥' + Number(n).toLocaleString('zh-CN') }
+
+function mkOrder(o){
+  return Object.assign({ id: orderNo(), cats:['a'], qty:1, addr:'', day:0, slot:0, note:'', status:0, price:0, tech:'', ts:Date.now() }, o);
+}
+function est(){
+  const base = draft.cats.reduce((s,id)=> s + (catOf(id)?.p || 0), 0);
+  return base * draft.qty;
+}
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(toast._t); toast._t = setTimeout(()=> t.classList.remove('on'), 1800);
+}
+
+/* ================= 渲染：首页 ================= */
+function renderHome(){
+  const d = cur();
+  $('#greetSub').textContent = d.greet;
+  $('#heroTag').textContent = d.tag;
+  $('#heroTitle').innerHTML = d.title;
+  $('#heroDesc').textContent = d.desc;
+  $('#cats').innerHTML = d.cats.map((c, k) => `
+    <button class="cat" onclick="pickCat('${c.id}')">
+      <span class="i">${String(k + 1).padStart(2, '0')}</span>
+      <b>${c.n}</b>
+      <span>${c.d}</span>
+    </button>`).join('');
+  $$('#ind button').forEach(b => b.classList.toggle('on', b.dataset.ind === ind));
+}
+function pickCat(id){
+  draft.cats = draft.cats.includes(id) ? draft.cats.filter(x=>x!==id) : [...draft.cats, id];
+  if (!draft.cats.length) draft.cats = [id];
+  go('#/book');
+}
+
+/* ================= 渲染：预约 ================= */
+function renderBook(){
+  const d = cur();
+  if (!draft.cats.length && d.cats.length) draft.cats = [d.cats[0].id];
+  $('#bookCats').innerHTML = d.cats.map(c => `
+    <button class="chip ${draft.cats.includes(c.id)?'on':''}" onclick="toggleCat('${c.id}')">${c.n}</button>`).join('');
+  $('#qty').textContent = draft.qty;
+  $('#unitTxt').textContent = d.unit;
+  $('#addr').value = draft.addr;
+  $('#days').innerHTML = DAYS.map((x,i)=>`<button class="chip ${draft.day===i?'on':''}" onclick="setDay(${i})">${x}</button>`).join('');
+  $('#slots').innerHTML = SLOTS.map((x,i)=>`<button class="chip ${draft.slot===i?'on':''}" onclick="setSlot(${i})">${x}</button>`).join('');
+  $('#note').value = draft.note;
+  $('#estPrice').textContent = money(est());
+}
+function toggleCat(id){
+  draft.cats = draft.cats.includes(id) ? draft.cats.filter(x=>x!==id) : [...draft.cats, id];
+  renderBook();
+}
+function stepQty(n){ draft.qty = Math.max(1, Math.min(99, draft.qty + n)); renderBook(); }
+function setDay(i){ draft.day = i; renderBook(); }
+function setSlot(i){ draft.slot = i; renderBook(); }
+
+function submitOrder(){
+  draft.addr = $('#addr').value.trim();
+  draft.note = $('#note').value.trim();
+  if (!draft.cats.length) return toast('先选一个品类');
+  if (draft.addr.length < 4) return toast('地址写详细一点，师傅才找得到');
+
+  const o = mkOrder({
+    cats:[...draft.cats], qty:draft.qty, addr:draft.addr,
+    day:draft.day, slot:draft.slot, note:draft.note,
+    status:0, price:est(), ind
+  });
+  orders.unshift(o);
+  store.set('sm_orders', orders);
+
+  $('#doneNo').textContent = '单号 ' + o.id;
+  draft = { cats:[], qty:1, addr:'', day:0, slot:0, note:'' };
+  go('#/done');
+}
+
+/* ================= 渲染：订单 ================= */
+let filter = 'all';
+function renderOrders(){
+  const list = orders.filter(o => filter==='all' ? true : filter==='run' ? o.status<4 : o.status===4);
+  const box = $('#orderList');
+  if (!list.length){ box.innerHTML = `<div class="card" style="padding:34px 18px;text-align:center"><p class="muted">还没有订单<br>回首页预约一个试试</p></div>`; return; }
+  box.innerHTML = list.map(o => {
+    const names = o.cats.map(id => (INDUSTRIES[o.ind||ind].cats.find(c=>c.id===id)||{}).n).filter(Boolean).join('、');
+    const cls = o.status===4 ? 'b-done' : o.status===0 ? 'b-wait' : 'b-run';
+    return `<div class="order" onclick="go('#/order/${o.id}')">
+      <div class="top"><span class="no">${o.id}</span><span class="badge ${cls}">${STATUS[o.status]}</span></div>
+      <div class="what">${names} · ${o.qty} ${(INDUSTRIES[o.ind||ind]).unit}</div>
+      <div class="meta">${DAYS[o.day]||'今天'} ${SLOTS[o.slot]||''} · ${o.addr}</div>
+      <div class="foot"><span class="price">${money(o.price)}<small>${o.status===4?'已结算':'预估'}</small></span>
+        <span class="muted">${o.tech ? o.tech + ' · ' : ''}查看详情 ›</span></div>
+    </div>`;
+  }).join('');
+}
+
+/* ================= 渲染：详情 ================= */
+function renderOrder(id){
+  const o = orders.find(x => x.id === id);
+  if (!o) return go('#/orders');
+  const d = INDUSTRIES[o.ind||ind];
+  const names = o.cats.map(cid => (d.cats.find(c=>c.id===cid)||{}).n).filter(Boolean).join('、');
+  const tl = STATUS.map((s,i)=>{
+    const cls = i < o.status ? 'done' : i === o.status ? (o.status === 4 ? 'done' : 'now') : '';
+    const sub = ['等待师傅接单','已指派 '+(o.tech||'师傅'),'师傅在路上','现场计量','结算完成'][i];
+    return `<div class="it ${cls}"><div class="dot"></div><div class="tx"><b>${s}</b><span>${sub}</span></div></div>`;
+  }).join('');
+
+  $('#orderDetail').innerHTML = `
+    <div class="card" style="margin-top:14px;padding:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><div class="no" style="font-family:ui-monospace,monospace;font-size:12px;color:var(--ink3)">${o.id}</div>
+        <div style="font-size:19px;font-weight:700;margin-top:4px">${catNames(names)}</div></div>
+        <span class="badge ${o.status===4?'b-done':o.status===0?'b-wait':'b-run'}">${STATUS[o.status]}</span>
+      </div>
+      <div class="muted" style="margin-top:12px;line-height:1.8">
+        ${DAYS[o.day]||'今天'} ${SLOTS[o.slot]||''}<br>
+        ${o.addr}${o.note ? '<br>备注：'+o.note : ''}
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px;padding:18px">
+      <h3 style="font-size:15px;font-weight:600;margin-bottom:4px">进度</h3>
+      <div class="tl">${tl}</div>
+    </div>
+
+    <div class="card" style="margin-top:12px;padding:16px 18px">
+      <div style="display:flex;justify-content:space-between;padding:6px 0"><span class="muted">预估金额</span><b>${money(o.price)}</b></div>
+      <div style="display:flex;justify-content:space-between;padding:6px 0"><span class="muted">上门费</span><span class="muted">免费</span></div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0 0;border-top:1px dashed var(--line);margin-top:6px"><span class="muted">结算方式</span><span class="muted">现场称重后付款</span></div>
+    </div>
+
+    <button class="btn ghost" style="margin-top:16px" onclick="toast('演示版不拨号：${o.tech||'师傅'} 138****8888')">联系师傅</button>
+  `;
+}
+function catNames(n){ return n || '上门服务' }
+
+/* ================= 渲染：后台 ================= */
+function renderAdmin(){
+  const wait = orders.filter(o=>o.status===0).length;
+  const run  = orders.filter(o=>o.status>0 && o.status<4).length;
+  const sum  = orders.filter(o=>o.status===4).reduce((s,o)=>s+o.price,0);
+  $('#adminStats').innerHTML = `
+    <div class="stat"><b>${wait}</b><span>待接单</span></div>
+    <div class="stat"><b>${run}</b><span>进行中</span></div>
+    <div class="stat"><b>${money(sum)}</b><span>已结算</span></div>`;
+
+  $('#adminList').innerHTML = orders.map(o => {
+    const d = INDUSTRIES[o.ind||ind];
+    const names = o.cats.map(cid => (d.cats.find(c=>c.id===cid)||{}).n).filter(Boolean).join('、');
+    const act = o.status===0 ? `<button class="btn sm" onclick="advance('${o.id}',event)">派单</button>`
+             : o.status===1 ? `<button class="btn sm" onclick="advance('${o.id}',event)">师傅已上门</button>`
+             : o.status===2 ? `<button class="btn sm" onclick="advance('${o.id}',event)">完成称重</button>`
+             : o.status===3 ? `<button class="btn sm" onclick="advance('${o.id}',event)">确认结算</button>`
+             : `<span class="badge b-done">已完成</span>`;
+    return `<div class="admin-row">
+      <div class="txt"><b>${names} · ${o.qty} ${d.unit}</b><span>${o.addr} · ${STATUS[o.status]}${o.tech?' · '+o.tech:''}</span></div>
+      ${act}
+    </div>`;
+  }).join('');
+}
+function advance(id, e){
+  e.stopPropagation();
+  const o = orders.find(x=>x.id===id); if(!o) return;
+  o.status = Math.min(4, o.status + 1);
+  if (o.status === 1) o.tech = TECHS[Math.floor(Math.random()*TECHS.length)];
+  store.set('sm_orders', orders);
+  renderAdmin(); renderOrders();
+  toast('已推进到「' + STATUS[o.status] + '」');
+}
+function exportCSV(){
+  const head = ['单号','品类','数量','地址','时间','状态','金额','师傅'];
+  const rows = orders.map(o=>{
+    const d = INDUSTRIES[o.ind||ind];
+    const names = o.cats.map(cid => (d.cats.find(c=>c.id===cid)||{}).n).join('+');
+    return [o.id, names, o.qty, o.addr, (DAYS[o.day]||'')+' '+(SLOTS[o.slot]||''), STATUS[o.status], o.price, o.tech||''];
+  });
+  const csv = '\ufeff' + [head, ...rows].map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
+  a.download = '订单导出_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  toast('已导出 CSV，可用 Excel 打开');
+}
+
+/* ================= 渲染：我的 ================= */
+function renderMe(){
+  $('#meCount').textContent = orders.length + ' 单';
+}
+
+/* ================= 路由 ================= */
+const ROUTES = {
+  '/home':   {el:'s-home',   title:'上门服务', tab:'home',  tabbar:true},
+  '/book':   {el:'s-book',   title:'预约上门', tab:'',      tabbar:false, back:true, bar:true},
+  '/done':   {el:'s-done',   title:'预约成功', tab:'',      tabbar:false},
+  '/orders': {el:'s-orders', title:'我的订单', tab:'orders',tabbar:true},
+  '/order':  {el:'s-order',  title:'订单详情', tab:'',      tabbar:false, back:true},
+  '/me':     {el:'s-me',     title:'我的',     tab:'me',    tabbar:true},
+  '/admin':  {el:'s-admin',  title:'管理后台', tab:'',      tabbar:false, back:true}
+};
+
+function go(hash){ location.hash = hash; }
+
+function route(){
+  const parts = location.hash.replace('#','').split('/').filter(Boolean);
+  const key = '/' + (parts[0] || 'home');
+  const r = ROUTES[key] || ROUTES['/home'];
+
+  $$('.screen').forEach(s => s.classList.remove('on'));
+  $('#' + r.el).classList.add('on');
+
+  $('#ttl').textContent = r.title;
+  $('#back').style.display = r.back ? 'grid' : 'none';
+  $('#tabs').classList.toggle('hide', !r.tabbar);
+  $('#ind').style.display = (key === '/home') ? 'flex' : 'none';
+  $('#submitbar').classList.toggle('on', !!r.bar);
+  $('#hdr').classList.toggle('solid', key !== '/home');
+
+  $$('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === r.tab));
+
+  if (key === '/home')   renderHome();
+  if (key === '/book')   renderBook();
+  if (key === '/orders') renderOrders();
+  if (key === '/me')     renderMe();
+  if (key === '/admin')  renderAdmin();
+  if (key === '/order')  renderOrder(parts[1]);
+
+  window.scrollTo({top:0, behavior:'instant'});
+}
+
+/* ================= 事件 ================= */
+$$('#ind button').forEach(b => b.onclick = () => {
+  ind = b.dataset.ind;
+  store.set('sm_ind', ind);
+  draft = { cats:[], qty:1, addr:'', day:0, slot:0, note:'' };
+  renderHome();
+  toast('已切换到「' + INDUSTRIES[ind].name + '」');
+});
+
+$$('#tabs button').forEach(b => b.onclick = () => go('#/' + b.dataset.tab));
+
+$$('#filters .chip').forEach(b => b.onclick = () => {
+  filter = b.dataset.f;
+  $$('#filters .chip').forEach(x => x.classList.toggle('on', x === b));
+  renderOrders();
+});
+
+window.addEventListener('hashchange', route);
+/* 支持 ?s=admin 直接打开某个页面（截图 / 分享用） */
+const qs = new URLSearchParams(location.search).get('s');
+if (qs && !location.hash) location.hash = '#/' + qs;
+if (!location.hash) location.hash = '#/home';
+route();
+</script>
+</body>
+</html>
